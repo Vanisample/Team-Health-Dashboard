@@ -1,0 +1,62 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2867
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 import streamlit as st\
+import pandas as pd\
+import plotly.express as px\
+\
+# Dummy Data\
+data = \{\
+    "Week": ["Wk1", "Wk2", "Wk3", "Wk4"],\
+    "FocusTime": [5.2, 4.8, 5.5, 4.2],\
+    "AfterHoursPings": [4.1, 6.3, 3.7, 7.5],\
+    "SprintCompletion": [82, 76, 88, 70],\
+    "PRIdleTime": [36, 42, 28, 50],\
+    "Sentiment": [7.4, 6.8, 8.1, 6.2],\
+    "CollaborationMeetings": [6, 5, 7, 4]\
+\}\
+df = pd.DataFrame(data)\
+\
+# Weighted Team Health Index\
+def team_health_index(row):\
+    B = (row["FocusTime"]/6 * 50) + ((10-row["AfterHoursPings"])/10 * 50)  # normalize burnout\
+    V = (row["SprintCompletion"]) * 0.6 + (100 - row["PRIdleTime"]) * 0.4\
+    S = row["Sentiment"] * 10\
+    C = row["CollaborationMeetings"]/10 * 100\
+    return 0.30*B + 0.30*V + 0.25*S + 0.15*C\
+\
+df["HealthIndex"] = df.apply(team_health_index, axis=1)\
+\
+# Streamlit Layout\
+st.title("AI-Powered Team Health Dashboard")\
+\
+# KPI Cards\
+st.metric("Burnout Risk (Week 4)", round(df.iloc[-1]["FocusTime"],1))\
+st.metric("Velocity (Week 4)", f"\{df.iloc[-1]['SprintCompletion']\}%")\
+st.metric("Sentiment (Week 4)", df.iloc[-1]["Sentiment"])\
+st.metric("Collaboration (Week 4)", df.iloc[-1]["CollaborationMeetings"])\
+st.metric("Team Health Index (Week 4)", round(df.iloc[-1]["HealthIndex"],1))\
+\
+# Visualizations\
+fig_burnout = px.scatter(df, x="FocusTime", y="AfterHoursPings", color="Week", title="Burnout Risk Heatmap")\
+st.plotly_chart(fig_burnout)\
+\
+fig_velocity = px.bar(df, x="Week", y="SprintCompletion", title="Sprint Completion Rate")\
+st.plotly_chart(fig_velocity)\
+\
+fig_pr_idle = px.line(df, x="Week", y="PRIdleTime", title="PR Idle Time Trend")\
+st.plotly_chart(fig_pr_idle)\
+\
+fig_sentiment = px.line(df, x="Week", y="Sentiment", title="Sentiment Trend", markers=True)\
+st.plotly_chart(fig_sentiment)\
+\
+fig_collab = px.bar(df, x="Week", y="CollaborationMeetings", title="Cross-Department Meetings")\
+st.plotly_chart(fig_collab)\
+\
+fig_health = px.line(df, x="Week", y="HealthIndex", title="Team Health Index Trend", markers=True)\
+st.plotly_chart(fig_health)\
+}
